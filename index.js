@@ -246,6 +246,7 @@ program
   .option('-u, --username [username]', 'username (use Token if you set 2FA on Github)')
   .option('-pwd, --password [password]', 'password')
   .option('-r, --raw', 'raw output')
+  .option('-f, --file [file]', 'JSON file to store results')
   .option('-apiurl, --apiurl [apiurl]', 'API url if not https://api.Github.com')
   .action((org, repo, options) => {
     if (!options.raw) introText()
@@ -276,8 +277,13 @@ program
             }
           }
         }
-
-        if (!options.raw) {
+        if (options.file) {
+          let json = fs.readFileSync(options.file);
+          let repos = json != '' && JSON.parse(json) || {};
+          repos[org + '/' + repo] = contributorsList.length;
+          fs.writeFileSync(options.file, JSON.stringify(repos));
+          console.log('Written to ' + options.file + '\n');
+        } else if (!options.raw) {
           console.log(chalk.red('\nTotal active contributors in the last ' + nbOfDays + ' days = ' + contributorsList.length))
           console.log(chalk.blue('\nTotal contributors since first commit = ' + rawCount))
           console.log(chalk.blue('\nDetails for the last ' + nbOfDays + ' days (rounded at ' + roundedNbOfWeeks + ' weeks): '))
